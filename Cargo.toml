@@ -32,6 +32,8 @@ ws = "0.9"
 ctrlc = "3"
 open = "1.2"
 globset = "0.4"
+sass-rs = "0.2"
+sass-sys = "=0.4.8"
 
 site = { path = "components/site" }
 errors = { path = "components/errors" }
