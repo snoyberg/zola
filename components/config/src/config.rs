@@ -157,6 +157,9 @@ pub struct Config {
 
     /// Set automatically when instantiating the config. Used for cachebusting
     pub build_timestamp: Option<i64>,
+
+    /// Append trailing slashes to permalinks (excluding rss.xml)
+    pub trailing_slash: bool,
 }
 
 impl Config {
@@ -233,14 +236,14 @@ impl Config {
 
     /// Makes a url, taking into account that the base url might have a trailing slash
     pub fn make_permalink(&self, path: &str) -> String {
-        let trailing_bit = if path.ends_with('/') || path.ends_with("rss.xml") || path.is_empty() {
+        let trailing_bit = if !self.trailing_slash || path.ends_with('/') || path.ends_with("rss.xml") || path.is_empty() {
             ""
         } else {
             "/"
         };
 
         // Index section with a base url that has a trailing slash
-        if self.base_url.ends_with('/') && path == "/" {
+        let mut res = if self.base_url.ends_with('/') && path == "/" {
             self.base_url.clone()
         } else if path == "/" {
             // index section with a base url that doesn't have a trailing slash
@@ -251,7 +254,13 @@ impl Config {
             format!("{}{}{}", self.base_url, path, trailing_bit)
         } else {
             format!("{}/{}{}", self.base_url, path, trailing_bit)
+        };
+
+        if !self.trailing_slash && path != "/" && path.ends_with('/') {
+            res.pop();
         }
+
+        res
     }
 
     /// Merges the extra data from the theme with the config extra data
@@ -348,6 +357,7 @@ impl Default for Config {
             extra_syntax_set: None,
             extra: HashMap::new(),
             build_timestamp: Some(1),
+            trailing_slash: true,
         }
     }
 }
@@ -423,6 +433,16 @@ hello = "world"
         let mut config = Config::default();
         config.base_url = "http://vincent.is".to_string();
         assert_eq!(config.make_permalink("hello"), "http://vincent.is/hello/");
+    }
+
+    #[test]
+    fn can_make_url_with_trailing_slashes_disabled() {
+        let mut config = Config::default();
+        config.base_url = "http://vincent.is".to_string();
+        config.trailing_slash = false;
+        assert_eq!(config.make_permalink("hello"), "http://vincent.is/hello");
+        assert_eq!(config.make_permalink("hello/"), "http://vincent.is/hello");
+        assert_eq!(config.make_permalink("/"), "http://vincent.is/");
     }
 
     #[test]
