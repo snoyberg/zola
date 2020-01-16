@@ -138,7 +138,7 @@ impl<'a> Paginator<'a> {
             }
 
             let page_path = format!("{}/{}/", self.paginate_path, index + 1);
-            let permalink = format!("{}{}", self.permalink, page_path);
+            let permalink = format!("{}/{}", self.permalink, page_path);
 
             let pager_path = if self.is_index {
                 page_path
